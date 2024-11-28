@@ -4,21 +4,29 @@
  */
 package com.monge.xeye.xeye.telegram;
 
+import com.monge.tbotboot.commands.Command;
+import com.monge.tbotboot.messenger.Response;
+import com.monge.tbotboot.messenger.Xupdate;
+import com.monge.tbotboot.objects.TelegramUser;
+import com.monge.tbotboot.quizes.QuizesControl;
 import com.monge.xeye.xeye.Explorer;
 import static com.monge.xeye.xeye.Explorer.ROOT_PATH;
-import com.monge.xeye.xeye.database.DataBase;
-import com.monge.xeye.xeye.database.DbBalancer;
 import com.monge.xeye.xeye.objects.AccountType;
+import com.monge.xeye.xeye.objects.Xfile;
+import com.monge.xeye.xeye.objects.Xuser;
 import com.monge.xeye.xeye.quizes.QuizNewFolder;
-import com.monge.xeye.xeye.quizes.QuizesControl;
 
 /**
  *
  * @author DeliveryExpress
  */
-class CommandsHandlers {
+public class UsersHandlers {
+    
 
     static void execute(Xupdate xupdate) {
+        TelegramUser telegramUser = xupdate.getTelegramUser();
+        Xuser xuser = new Xuser(telegramUser);
+               
 
         System.out.println("execute up´date");
 
@@ -26,7 +34,7 @@ class CommandsHandlers {
 
             if (xupdate.getFile() != null) {
                 System.out.println("Se recibio un archivo");
-                DataBase.Files.Files().create(xupdate.getFile());
+                new Xfile(xupdate.getFile()).create();
                 return;
             }
         } catch (Exception e) {
@@ -45,7 +53,7 @@ class CommandsHandlers {
 
                 Command command = xupdate.getCommand();
 
-                switch (xupdate.getSenderTelegramUser().getAccountType()) {
+                switch (xuser.getAccountType()) {
 
                     case AccountType.NOT_REGISTRED:
 
@@ -105,4 +113,6 @@ class CommandsHandlers {
 
     }
 
+
+    
 }

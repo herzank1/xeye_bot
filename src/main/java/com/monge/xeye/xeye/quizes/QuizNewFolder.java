@@ -4,11 +4,10 @@
  */
 package com.monge.xeye.xeye.quizes;
 
+import com.monge.tbotboot.messenger.Response;
+import com.monge.tbotboot.messenger.Xupdate;
+import com.monge.tbotboot.quizes.Quiz;
 import com.monge.xeye.xeye.Explorer;
-import com.monge.xeye.xeye.objects.TelegramUser;
-import com.monge.xeye.xeye.telegram.Response;
-import com.monge.xeye.xeye.telegram.Xupdate;
-import com.monge.xeye.xeye.utils.Utils;
 
 /**
  *
@@ -21,11 +20,12 @@ public class QuizNewFolder extends Quiz {
     }
 
     @Override
-    void execute(Xupdate xupdate) {
+    public void execute(Xupdate xupdate) {
+    
+        
+        Response response = new Response(xupdate.getTelegramUser());
 
-        Response response = new Response(xupdate.getSenderTelegramUser());
-
-        switch (super.step) {
+        switch (super.getStep()) {
 
             case 0:
                 response.setText("Ingrese Nombre de la carpeta");
@@ -44,7 +44,10 @@ public class QuizNewFolder extends Quiz {
                 break;
 
         }
-
+    
+    
     }
+
+   
 
 }

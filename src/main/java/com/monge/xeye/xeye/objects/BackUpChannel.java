@@ -5,6 +5,7 @@
 package com.monge.xeye.xeye.objects;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.monge.xsqlite.xsqlite.BaseDao;
 import lombok.Data;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 
@@ -13,7 +14,7 @@ import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdm
  * @author DeliveryExpress
  */
 @Data
-public class BackUpChannel {
+public class BackUpChannel extends BaseDao{
     @DatabaseField(generatedId = false)
     String id;
     @DatabaseField

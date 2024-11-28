@@ -5,14 +5,15 @@
 package com.monge.xeye.xeye;
 
 import com.google.gson.GsonBuilder;
+import com.monge.tbotboot.messenger.MessageMenu;
+import com.monge.tbotboot.messenger.Response;
+import com.monge.tbotboot.messenger.Xupdate;
+import com.monge.tbotboot.objects.TelegramFile;
+import com.monge.tbotboot.utils.RandomCaptcha;
 import com.monge.xeye.xeye.contability.BalanceAccount;
-import com.monge.xeye.xeye.database.DataBase;
-import com.monge.xeye.xeye.objects.FileType;
-import com.monge.xeye.xeye.objects.RandomCaptcha;
-import com.monge.xeye.xeye.objects.TelegramFile;
-import com.monge.xeye.xeye.telegram.MessageMenu;
-import com.monge.xeye.xeye.telegram.Response;
-import com.monge.xeye.xeye.telegram.Xupdate;
+import com.monge.xeye.xeye.objects.Xfile;
+import com.monge.xeye.xeye.objects.Xuser;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -32,10 +33,10 @@ public class Explorer {
 
     public static Map<String, String> usersCurrentsPath = new HashMap<>();
 
-    public static Map<String, TelegramFile> files = new HashMap<>();
+    public static Map<String, Xfile> files = new HashMap<>();
     public static Map<String, String> hashedPath = new HashMap<>();
 
-    private static void loadFile(TelegramFile f) {
+    private static void loadFile(Xfile f) {
 
         /*verificacion y creacion de directorios*/
         extractFolders(f);
@@ -52,7 +53,7 @@ public class Explorer {
 
     }
 
-    private static void extractFolders(TelegramFile f) {
+    private static void extractFolders(Xfile f) {
 
         // Dividir la ruta en partes
         String[] partes = f.getPath().split("/");
@@ -70,7 +71,7 @@ public class Explorer {
                 if (!files.containsKey(acumulador + "/")) {
 
                     /*creamos la carpeta o subcarpeta*/
-                    TelegramFile telegramFile = new TelegramFile(acumulador + "/");
+                    Xfile telegramFile = new Xfile(acumulador + "/");
 
                     if (!telegramFile.getFileName().equals(ROOT_NAME)) {
                         files.put(acumulador + "/", telegramFile);
@@ -86,8 +87,8 @@ public class Explorer {
 
     /*cargamos archivos de la base de datos*/
     public static void init() {
-        List<TelegramFile> readAll = DataBase.Files.Files().readAll();
-        for (TelegramFile f : readAll) {
+        List<Xfile> readAll = Xfile.readAll(Xfile.class);
+        for (Xfile f : readAll) {
 
             loadFile(f);
 
@@ -129,11 +130,11 @@ public class Explorer {
      * @param path
      * @return la lista de archivos y carpetas del directorio
      */
-    public static ArrayList<TelegramFile> readDirectory(String path) {
+    public static ArrayList<Xfile> readDirectory(String path) {
 
         System.out.println("Readind directory -> " + path);
-        ArrayList<TelegramFile> result = new ArrayList<>();
-        for (Map.Entry<String, TelegramFile> entry : files.entrySet()) {
+        ArrayList<Xfile> result = new ArrayList<>();
+        for (Map.Entry<String, Xfile> entry : files.entrySet()) {
 
             if (entry.getValue().getPath().equals(path)) {
                 result.add(entry.getValue());
@@ -215,7 +216,7 @@ public class Explorer {
             System.out.println("userCurrentPath: " + userCurrentPath);
 
             MessageMenu menu = new MessageMenu();
-            ArrayList<TelegramFile> readDirectory = readDirectory(userCurrentPath);
+            ArrayList<Xfile> readDirectory = readDirectory(userCurrentPath);
 
             menu.addButton("📂✴", "/newfolder", false);
             menu.addButton("♻ ", "/menu", true);
@@ -234,7 +235,7 @@ public class Explorer {
 
             } else {
 
-                for (TelegramFile f : readDirectory) {
+                for (Xfile f : readDirectory) {
 
                     String hash = null;
                     if (f.isDirectory()) {
@@ -247,10 +248,13 @@ public class Explorer {
 
                 }
             }
+            
+                Xuser xuser = new Xuser(xupdate.getTelegramUser());
 
-            BalanceAccount balance = xupdate.getTelegramUser().getBalance();
 
-            Response.editMessage(xupdate.getSenderTelegramUser(), xupdate.getMessageId(),
+            BalanceAccount balance = xuser.getBalance();
+
+            Response.editMessage(xupdate.getTelegramUser(), xupdate.getMessageId(),
                     "Creditos:" + balance.getBalance() + "\n" + userCurrentPath,
                     menu);
 
@@ -264,7 +268,7 @@ public class Explorer {
 
         String hashedFile = xupdate.getCommand().getParam(1);
         String filepath = hashedPath.get(hashedFile);
-        TelegramFile file = files.get(filepath);
+        Xfile file = files.get(filepath);
 
         MessageMenu menu = new MessageMenu();
         menu.addButton("⬅", "/menu", true);
@@ -280,9 +284,9 @@ public class Explorer {
         
         if (file.hasPreview(xupdate.getBotUserName())) {
 
-            Response.editMediaMessage(xupdate.getSenderTelegramUser(), xupdate.getMessageId(),file ,text, menu);
+            Response.editMediaMessage(xupdate.getTelegramUser(), xupdate.getMessageId(),file.getAsTelegramFile(xupdate.getBotUserName()) ,text, menu);
         } else {
-            Response.editMessage(xupdate.getSenderTelegramUser(), xupdate.getMessageId(), text, menu);
+            Response.editMessage(xupdate.getTelegramUser(), xupdate.getMessageId(), text, menu);
         }
 
         
@@ -292,24 +296,28 @@ public class Explorer {
     public static void getFile(Xupdate xupdate) {
         String hashedFile = xupdate.getCommand().getParam(1);
         String filepath = hashedPath.get(hashedFile);
-        TelegramFile file = files.get(filepath);
+        Xfile file = files.get(filepath);
+        
+        Xuser xuser = new Xuser(xupdate.getTelegramUser());
 
         System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(file));
 
         /*charge credits*/
-        BalanceAccount balance = xupdate.getSenderTelegramUser().getBalance();
+        BalanceAccount balance = xuser.getBalance();
         
         
 
         if (balance.getBalance() > 0) {
             Response.deleteMessage(xupdate);
-            Response.sendFile(xupdate.getSenderTelegramUser(), file, file.getFileName()
+            
+            TelegramFile asTelegramFile = file.getAsTelegramFile(xupdate.getBotUserName());
+            Response.sendFile(xupdate.getTelegramUser(), asTelegramFile, asTelegramFile.getFileName()
                     + "\n" + file.getId(), null);
             balance.setBalance(balance.getBalance() - 1);
-            DataBase.Contability.BalancesAccounts.BalancesAccounts().update(balance);
+            balance.update();
         } else {
 
-            Response.sendMessage(xupdate.getSenderTelegramUser(), "Se agotaron tus creditos!", null);
+            Response.sendMessage(xupdate.getTelegramUser(), "Se agotaron tus creditos!", null);
         }
 
     }
@@ -323,8 +331,8 @@ public class Explorer {
     public static void createFolder(Xupdate xupdate, String name) {
 
         String userCurrentPath = getUserCurrentPath(xupdate.getSenderId());
-        TelegramFile folder = new TelegramFile(userCurrentPath + name);
-        DataBase.Files.Files().create(folder);
+        Xfile folder = new Xfile(userCurrentPath + name);
+        folder.create();
 
         loadFile(folder);
 

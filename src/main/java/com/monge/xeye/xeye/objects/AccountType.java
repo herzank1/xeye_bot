@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.monge.xeye.xeye.objects;
 
@@ -8,12 +8,11 @@ package com.monge.xeye.xeye.objects;
  *
  * @author DeliveryExpress
  */
+public class AccountType {
 
-    public  interface AccountType {
+    public static final String NOT_REGISTRED = "NOT_REGISTRED";
 
-        String IS_GROUP = "IS_GROUP";
-        String USER = "USER";
-        String MODERATOR = "MODERATOR";
-        String NOT_REGISTRED = "NOT_REGISTRED";
+    public static final String USER = "USER";
+    public static final String MODERATOR = "MODERATOR";
 
-    }
+}

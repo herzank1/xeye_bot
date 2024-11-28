@@ -4,11 +4,8 @@
 
 package com.monge.xeye.xeye;
 
-import com.google.gson.GsonBuilder;
+import com.monge.tbotboot.messenger.BotsHandler;
 import com.monge.xeye.xeye.database.DataBase;
-import com.monge.xeye.xeye.objects.BackUpChannel;
-import com.monge.xeye.xeye.telegram.BotsHandler;
-import com.monge.xeye.xeye.telegram.Methods;
 import com.monge.xeye.xeye.utils.Settings;
 
 /**
@@ -30,8 +27,6 @@ public class Xeye {
         Explorer.init();
         /*Cargamos los bots e iniciamos el mensajero executor*/
         BotsHandler.init();
-        /*activamos el sistema de seguridad contra ataques de fuerza bruta*/
-        SystemSecurity.init();
         
         /*activamos el respaldador*/
          BackUpper.init();

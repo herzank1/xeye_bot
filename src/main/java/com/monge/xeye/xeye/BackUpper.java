@@ -4,21 +4,17 @@
  */
 package com.monge.xeye.xeye;
 
-import com.monge.xeye.xeye.database.DataBase;
-import com.monge.xeye.xeye.database.DbBalancer;
+
+import com.monge.tbotboot.messenger.Bot;
+import com.monge.tbotboot.messenger.BotsHandler;
+import com.monge.tbotboot.messenger.Response;
+import com.monge.tbotboot.objects.TelegramGroup;
 import com.monge.xeye.xeye.objects.BackUpChannel;
-import com.monge.xeye.xeye.objects.TelegramFile;
-import com.monge.xeye.xeye.telegram.Bot;
-import com.monge.xeye.xeye.telegram.BotsHandler;
-import com.monge.xeye.xeye.telegram.Executor;
-import com.monge.xeye.xeye.telegram.Response;
+import com.monge.xeye.xeye.objects.Xfile;
 import java.util.ArrayList;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +42,7 @@ public class BackUpper {
             }
             
             /*Obtenemos los archivos ya cargados en el explorador y filtramos las carpetas*/
-            ArrayList<TelegramFile> files = new ArrayList<>(Explorer.files.values());
+            ArrayList<Xfile> files = new ArrayList<>(Explorer.files.values());
             files = files.stream().filter(c-> !c.isDirectory()).collect(Collectors.toCollection(ArrayList::new));
             
             System.out.println("Archivos cargados: "+files.size());
@@ -57,7 +53,7 @@ public class BackUpper {
             }
             
             /*Obtenemos los canales de respaldo*/
-            ArrayList<BackUpChannel> channels = (ArrayList<BackUpChannel>) DataBase.Files.BackUpChannels().readAll();
+            ArrayList<BackUpChannel> channels = (ArrayList<BackUpChannel>) BackUpChannel.readAll(BackUpChannel.class);
 
             System.out.println("Canales de respaldo: "+channels.size());
             if (channels.isEmpty()) {
@@ -68,7 +64,7 @@ public class BackUpper {
             /**
              * Por cada archivo
              */
-            for (TelegramFile file : files) {
+            for (Xfile file : files) {
                 /*Obtenemos el primer bot que sí lo tiene*/
                 HashMap<String, String> fileMirrors = file.getFileMirrors();
                 if (!fileMirrors.isEmpty()) {
@@ -83,8 +79,13 @@ public class BackUpper {
                                 // Aquí introducimos la espera de 30 segundos
                                 try {
                                     System.out.println("Respaldando archivo en "+bk.getName());
-                                    Response.sendFile(senderBot.getBotUsername(), bk.getId(), file, file.getFileName()
+                                    TelegramGroup tg = new TelegramGroup(bk.getId(),senderBot.getBotUsername());
+                                    Response.sendFile(tg,
+                                            file.getAsTelegramFile(mirror.getKey()), 
+                                            file.getFileName()
                                             + "\n" + file.getId(), null);
+                                    
+                                    
                                     Thread.sleep(30000); // Espera de 30 segundos antes de la siguiente iteración
                                 } catch (InterruptedException e) {
                                     Thread.currentThread().interrupt();

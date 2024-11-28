@@ -6,24 +6,22 @@ package com.monge.xeye.xeye.objects;
 
 import com.google.gson.Gson;
 import com.j256.ormlite.field.DatabaseField;
+import com.monge.tbotboot.objects.FileType;
+import com.monge.tbotboot.objects.TelegramFile;
 import com.monge.xeye.xeye.Explorer;
-import com.monge.xeye.xeye.database.DataBase;
-import com.monge.xeye.xeye.database.DbBalancer;
-import com.monge.xeye.xeye.telegram.Xupdate;
 import com.monge.xeye.xeye.utils.Utils;
+import com.monge.xsqlite.xsqlite.BaseDao;
 import java.util.HashMap;
 import lombok.Data;
-import org.telegram.telegrambots.meta.api.objects.Document;
-import org.telegram.telegrambots.meta.api.objects.Video;
 
 /**
  *
- * @author DeliveryExpress
- * Los archivos de telegram generan un id y diferente cuando se envia a otro usuario o Bot
- * es necesario que bots y que id esta relacionado con el archivo.
+ * @author DeliveryExpress Los archivos de telegram generan un id y diferente
+ * cuando se envia a otro usuario o Bot es necesario que bots y que id esta
+ * relacionado con el archivo.
  */
 @Data
-public class TelegramFile {
+public class Xfile extends BaseDao {
 
     @DatabaseField(generatedId = false)
     String id;
@@ -47,16 +45,13 @@ public class TelegramFile {
     /*Enlaces o bots que contienen el archivo*/
     @DatabaseField
     String fileMirrors;
-    
-    
-   
 
-    public TelegramFile() {
+    public Xfile() {
         this.fileMirrors = new Gson().toJson(new HashMap<>());
         this.previewsMirrors = new Gson().toJson(new HashMap<>());
     }
-    
-    public TelegramFile(String ruta) {
+
+    public Xfile(String ruta) {
         // Eliminar el último '/' para evitar elementos vacíos
         if (ruta.endsWith("/")) {
             ruta = ruta.substring(0, ruta.length() - 1);
@@ -66,25 +61,23 @@ public class TelegramFile {
         String[] partes = ruta.split("/");
         this.fileName = partes[partes.length - 1]; // Última parte
         this.path = String.join("/", partes).replace("/" + this.fileName, "") + "/";
-        this.type=FileType.FOLDER;
-        
+        this.type = FileType.FOLDER;
+
         this.fileMirrors = new Gson().toJson(new HashMap<>());
         this.previewsMirrors = new Gson().toJson(new HashMap<>());
 
     }
-    
-   /***
-    * 
-    * @return folder/filename
-    */
+
+    /**
+     * *
+     *
+     * @return folder/filename
+     */
     public String getAbsolutePath() {
-    
-         return this.path + this.fileName;
-      
-       
+
+        return this.path + this.fileName;
+
     }
-    
-    
 
     /**
      * *
@@ -92,22 +85,11 @@ public class TelegramFile {
      * @param document
      * @param mirror
      */
-    public TelegramFile(Xupdate aThis, Document document) {
+    public Xfile(TelegramFile file) {
         this.id = Utils.generateXeyeUIDD();
-        this.fileName = document.getFileName();
-        this.type = FileType.DOCUMENT;
-        addFileMirror(document.getFileId(), aThis.getBotUserName());
-        this.path = Explorer.ROOT_PATH;
-
-    }
-
-    public TelegramFile(Xupdate aThis, Video video) {
-
-        this.id = Utils.generateXeyeUIDD();
-        this.details = aThis.getText();
-        this.fileName = aThis.getText();
-        this.type = FileType.VIDEO;
-        addFileMirror(video.getFileId(), aThis.getBotUserName());
+        this.fileName = file.getFileName();
+        this.type = file.getType();
+        addFileMirror(file.getFileId(), file.getBot());
         this.path = Explorer.ROOT_PATH;
 
     }
@@ -156,47 +138,50 @@ public class TelegramFile {
 
         this.previewsMirrors = gson.toJson(hashMap);
     }
-    
-     /***
-     * 
+
+    /**
+     * *
+     *
      * @param botUserName
      * @return file Id of specific bot
      */
     public String getFileId(String botUserName) {
         return getFileMirrors().get(botUserName);
     }
-    
-    public String  getPreview(String botUserName){
+
+    public String getPreview(String botUserName) {
         return getPrevMirrors().get(botUserName);
-    
+
     }
-    
+
     public boolean hasPreview(String botUserName) {
         return getPreview(botUserName) != null;
     }
-    
-      /***
-     * 
+
+    /**
+     * *
+     *
      * @param botUserName
      * @return true if Bot has the file Id of this File
      */
     public boolean existFileId(String botUserName) {
-        return getFileId(botUserName)!=null;
+        return getFileId(botUserName) != null;
     }
 
     public boolean isDirectory() {
         return this.type.equals(FileType.FOLDER);
 
     }
-    
-    /***
-     * funcion directa para actualizar este objeto en la base de datos
-     */
-    public void dbUpdate(){
-        DataBase.Files.Files().update(this);
-    
-    }
 
- 
+    public TelegramFile getAsTelegramFile(String botUserName) {
+        TelegramFile tf = new TelegramFile();
+        tf.setBot(botUserName);
+        tf.setType(this.type);
+        tf.setDetails(this.details);
+        tf.setFileId(this.getFileId(botUserName));
+
+        return tf;
+
+    }
 
 }
