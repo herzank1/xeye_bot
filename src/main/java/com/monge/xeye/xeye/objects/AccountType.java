@@ -9,10 +9,7 @@ package com.monge.xeye.xeye.objects;
  * @author DeliveryExpress
  */
 public class AccountType {
-
-    public static final String NOT_REGISTRED = "NOT_REGISTRED";
-
-    public static final String USER = "USER";
+ public static final String USER = "USER";
     public static final String MODERATOR = "MODERATOR";
 
 }

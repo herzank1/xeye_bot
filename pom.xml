@@ -18,11 +18,7 @@
             <version>2.10.1</version>
         </dependency>
         
-        <dependency>
-            <groupId>com.monge.tbotboot</groupId>
-            <artifactId>TelegramBotFramework</artifactId>
-            <version>1</version>
-        </dependency>
+    
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
@@ -37,6 +33,12 @@
             <scope>provided</scope>
         </dependency>
         
+            <dependency>
+            <groupId>com.monge.tbotboot</groupId>
+            <artifactId>TelegramBotFramework</artifactId>
+            <version>1</version>
+        </dependency>
+        
         <dependency>    
             <groupId>com.monge.xsqlite</groupId>
             <artifactId>XSQLite</artifactId>
@@ -45,4 +47,39 @@
         
          
     </dependencies>
+    
+    <build>
+    <plugins>
+        <!-- Maven Assembly Plugin -->
+            <!-- Maven Jar Plugin: Crea el JAR del código principal sin dependencias -->
+        <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <mainClass>com.monge.xeye.xeye.Xeye</mainClass>
+                    </manifest>
+                </archive>
+            </configuration>
+        </plugin>
+
+        <!-- Maven Dependency Plugin -->
+        <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>copy-dependencies</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-dependencies</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        <includeScope>runtime</includeScope>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 </project>

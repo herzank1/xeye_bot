@@ -8,6 +8,7 @@ package com.monge.xeye.xeye.contability;
 import com.j256.ormlite.field.DatabaseField;
 import com.monge.xeye.xeye.utils.Utils;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -15,6 +16,7 @@ import lombok.Data;
  */
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class Transacction {
     
     @DatabaseField(id = true)

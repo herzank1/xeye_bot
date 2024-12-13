@@ -5,10 +5,11 @@
 package com.monge.xeye.xeye.objects;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.monge.tbotboot.messenger.Bot;
 import com.monge.xsqlite.xsqlite.BaseDao;
+import java.util.logging.Logger;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
 
 /**
  *
@@ -16,12 +17,19 @@ import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdm
  */
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class BackUpChannel extends BaseDao{
+public class DBot extends BaseDao {
+    
     @DatabaseField(generatedId = false)
-    String id;
+    private String userName;
     @DatabaseField
-    String name;
-    @DatabaseField
-    String description;
+    private String apiKey;
+
+    public DBot() {
+    }
+   
+
+    public Bot getBot() {
+        return new Bot(this.userName,this.apiKey);
+    }
 
 }

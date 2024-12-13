@@ -8,11 +8,14 @@ import com.google.gson.Gson;
 import com.j256.ormlite.field.DatabaseField;
 import com.monge.tbotboot.objects.FileType;
 import com.monge.tbotboot.objects.TelegramFile;
-import com.monge.xeye.xeye.Explorer;
+import com.monge.xeye.explorer.DriveExplorer;
+import com.monge.xeye.explorer.SharedUtilities;
 import com.monge.xeye.xeye.utils.Utils;
 import com.monge.xsqlite.xsqlite.BaseDao;
 import java.util.HashMap;
+import java.util.Map;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -21,9 +24,10 @@ import lombok.Data;
  * relacionado con el archivo.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Xfile extends BaseDao {
 
-    @DatabaseField(generatedId = false)
+    @DatabaseField(id = true)
     String id;
 
     @DatabaseField
@@ -47,36 +51,9 @@ public class Xfile extends BaseDao {
     String fileMirrors;
 
     public Xfile() {
+        this.id = Utils.generateXeyeUIDD();
         this.fileMirrors = new Gson().toJson(new HashMap<>());
         this.previewsMirrors = new Gson().toJson(new HashMap<>());
-    }
-
-    public Xfile(String ruta) {
-        // Eliminar el último '/' para evitar elementos vacíos
-        if (ruta.endsWith("/")) {
-            ruta = ruta.substring(0, ruta.length() - 1);
-        }
-
-        // Dividir la ruta por "/"
-        String[] partes = ruta.split("/");
-        this.fileName = partes[partes.length - 1]; // Última parte
-        this.path = String.join("/", partes).replace("/" + this.fileName, "") + "/";
-        this.type = FileType.FOLDER;
-
-        this.fileMirrors = new Gson().toJson(new HashMap<>());
-        this.previewsMirrors = new Gson().toJson(new HashMap<>());
-
-    }
-
-    /**
-     * *
-     *
-     * @return folder/filename
-     */
-    public String getAbsolutePath() {
-
-        return this.path + this.fileName;
-
     }
 
     /**
@@ -87,10 +64,43 @@ public class Xfile extends BaseDao {
      */
     public Xfile(TelegramFile file) {
         this.id = Utils.generateXeyeUIDD();
-        this.fileName = file.getFileName();
+        this.fileName = normalizeName(file.getFileName()) + "." + file.getType().toLowerCase();
         this.type = file.getType();
         addFileMirror(file.getFileId(), file.getBot());
-        this.path = Explorer.ROOT_PATH;
+        /*root por default*/
+        this.path = SharedUtilities.createPath(DriveExplorer.ROOT_PATH, fileName);
+        this.previewsMirrors = new Gson().toJson(new HashMap<>());
+
+    }
+
+    /**
+     * *
+     *
+     * @param document
+     * @param mirror
+     */
+    public Xfile(TelegramFile file, String path) {
+        this.id = Utils.generateXeyeUIDD();
+        this.fileName = normalizeName(file.getFileName()) + "." + file.getType().toLowerCase();
+        this.type = file.getType();
+        addFileMirror(file.getFileId(), file.getBot());
+        /*root por default*/
+        this.path = SharedUtilities.createPath(path, fileName);
+        this.previewsMirrors = new Gson().toJson(new HashMap<>());
+
+    }
+
+    /**
+     * *
+     * use this to create directory
+     *
+     * @param path
+     */
+    public Xfile(String path) {
+        this.id = Utils.generateXeyeUIDD();
+        this.type = FileType.FOLDER;
+        this.path = path;
+        this.fileName = SharedUtilities.getName(path);
 
     }
 
@@ -111,7 +121,7 @@ public class Xfile extends BaseDao {
         }
 
         prevMirrors1.put(mirror, fileId);
-        setFileMirrors(prevMirrors1);
+        setPrevMirrors(prevMirrors1);
     }
 
     public HashMap<String, String> getFileMirrors() {
@@ -139,6 +149,37 @@ public class Xfile extends BaseDao {
         this.previewsMirrors = gson.toJson(hashMap);
     }
 
+    public void removePreview(String botUserNname) {
+
+        try {
+            HashMap<String, String> prevMirrors = this.getPrevMirrors();
+            prevMirrors.remove(botUserNname);
+            this.setPrevMirrors(prevMirrors);
+            this.update();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+
+    }
+    
+     public void removefileMirror(String botUserNname) {
+
+        try {
+            HashMap<String, String> fileMirrors = this.getFileMirrors();
+            fileMirrors.remove(botUserNname);
+            this.setFileMirrors(fileMirrors);
+            this.update();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+
+    }
+    
+    
+    
+
     /**
      * *
      *
@@ -155,7 +196,12 @@ public class Xfile extends BaseDao {
     }
 
     public boolean hasPreview(String botUserName) {
-        return getPreview(botUserName) != null;
+        try {
+            return getPreview(botUserName) != null;
+        } catch (java.lang.NullPointerException e) {
+            return false;
+        }
+
     }
 
     /**
@@ -173,15 +219,75 @@ public class Xfile extends BaseDao {
 
     }
 
+    public TelegramFile getPreviewAsTelegramFile(String botUserName) {
+        String previewId = getPreview(botUserName);
+
+        TelegramFile tf = new TelegramFile();
+        tf.setFileId(previewId);
+        tf.setBot(botUserName);
+        tf.setFileName("prev_" + this.fileName);
+        tf.setType(FileType.IMAGE);
+        tf.setDetails("preview");
+
+        return tf;
+    }
+
     public TelegramFile getAsTelegramFile(String botUserName) {
         TelegramFile tf = new TelegramFile();
         tf.setBot(botUserName);
+        tf.setFileName(this.fileName);
         tf.setType(this.type);
         tf.setDetails(this.details);
         tf.setFileId(this.getFileId(botUserName));
-
         return tf;
+    }
 
+    public String getData() {
+        return "[name]: " + this.fileName + "\n"
+                + "[id]: " + this.id + "\n"
+                + "[details]: " + this.details + "\n"
+                + "Available on -> \n"
+                + getBotsMirrors();
+    }
+
+    private String getBotsMirrors() {
+        String mirrors = "";
+        HashMap<String, String> fileMirrors1 = this.getFileMirrors();
+        for (Map.Entry<String, String> entry : fileMirrors1.entrySet()) {
+            mirrors += "🎬 " + entry.getKey() + "\n";
+        }
+
+        return mirrors;
+
+    }
+
+    private String normalizeName(String input) {
+        // Reemplaza los caracteres "." y "/"
+        String normalized = input.replaceAll("[./]", "");
+
+        // Divide el texto en palabras utilizando el espacio como delimitador
+        String[] words = normalized.split("\\s+");
+
+        // Limita a un máximo de 5 palabras
+        if (words.length > 5) {
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < 5; i++) {
+                result.append(words[i]).append(" ");
+            }
+            // Elimina el último espacio extra
+            return result.toString().trim();
+        }
+
+        // Si ya tiene 5 o menos palabras, simplemente las une de nuevo
+        return normalized;
+    }
+
+    public void updatePath(String path) {
+        if(SharedUtilities.isValidPath(path)){
+            this.path = SharedUtilities.createPath(path, fileName);
+            
+        }
+   
     }
 
 }

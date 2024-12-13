@@ -2,16 +2,19 @@ package com.monge.xeye.xeye.objects;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.monge.tbotboot.objects.TelegramUser;
+import com.monge.xeye.xeye.Xeye;
 import com.monge.xeye.xeye.contability.BalanceAccount;
 
 import com.monge.xsqlite.xsqlite.BaseDao;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  *
  * @author DeliveryExpress
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Xuser extends BaseDao {
 
     @DatabaseField(id = true)
@@ -50,7 +53,17 @@ public class Xuser extends BaseDao {
     }
 
     public BalanceAccount getBalance() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        BalanceAccount read = BalanceAccount.read(BalanceAccount.class, this.balanceAccountId);
+
+        if (read == null) {
+            read = new BalanceAccount();
+            this.setBalanceAccountId(read.getAccountNumber());
+            this.update();
+            read.create();
+        }
+        
+        return read;
+
     }
 
 }

@@ -5,15 +5,20 @@
 package com.monge.xeye.xeye;
 
 
+import com.monge.xeye.explorer.DriveExplorer;
 import com.monge.tbotboot.messenger.Bot;
 import com.monge.tbotboot.messenger.BotsHandler;
 import com.monge.tbotboot.messenger.Response;
 import com.monge.tbotboot.objects.TelegramGroup;
+import static com.monge.xeye.explorer.DriveExplorer.ROOT_PATH;
+import com.monge.xeye.explorer.VirtualFile;
 import com.monge.xeye.xeye.objects.BackUpChannel;
 import com.monge.xeye.xeye.objects.Xfile;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -42,7 +47,7 @@ public class BackUpper {
             }
             
             /*Obtenemos los archivos ya cargados en el explorador y filtramos las carpetas*/
-            ArrayList<Xfile> files = new ArrayList<>(Explorer.files.values());
+            ArrayList<Xfile> files = (ArrayList<Xfile>) readDirectory(ROOT_PATH);
             files = files.stream().filter(c-> !c.isDirectory()).collect(Collectors.toCollection(ArrayList::new));
             
             System.out.println("Archivos cargados: "+files.size());
@@ -101,6 +106,24 @@ public class BackUpper {
             
               System.out.println("Proceso finalizado.");
         }).start(); // Inicia el hilo separado
+    }
+    
+    
+    
+        private static ArrayList<Xfile> readDirectory(String path) {
+        List<VirtualFile> all = DriveExplorer.readDirectory(path);
+        List<Xfile> result = new ArrayList<>();
+
+        for (VirtualFile file : all) {
+                result.add(file.getXfile());
+
+        }
+        // Ordenar alfabéticamente por el nombre (getName)
+        // Ordenar alfabéticamente por el nombre (getName)
+        result.sort(Comparator.comparing(Xfile::getFileName));
+
+        return (ArrayList<Xfile>) result;
+  
     }
 }
 

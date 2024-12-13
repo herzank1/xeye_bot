@@ -5,30 +5,56 @@
 package com.monge.xeye.xeye.contability;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.monge.xeye.xeye.utils.Utils;
 import com.monge.xsqlite.xsqlite.BaseDao;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class BalanceAccount extends BaseDao{
+@EqualsAndHashCode(callSuper = false)
+public class BalanceAccount extends BaseDao {
 
-     @DatabaseField(id = true)
+    private static final long SECONDS_IN_TWO_HOURS = 60L * 60 * 2;
+    private static final long SECONDS_IN_30_DAYS = 30L * 24 * 60 * 60;
+
+    @DatabaseField(id = true)
     String accountNumber;
-      @DatabaseField
+    @DatabaseField
     int balance;
+    @DatabaseField
+    /*Unix timeStamp*/
+    long expiration;
 
     public BalanceAccount() {
-        this.accountNumber=UUID.randomUUID().toString();
-        this.balance=0;
+        this.accountNumber = UUID.randomUUID().toString();
+        this.balance = 0;
+        this.expiration = Utils.DateUtils.getUnixTimeStamp() + SECONDS_IN_TWO_HOURS;
     }
 
     public BalanceAccount(String accountNumber, int balance) {
         this.accountNumber = UUID.randomUUID().toString();
         this.balance = balance;
+        this.expiration = Utils.DateUtils.getUnixTimeStamp() + SECONDS_IN_TWO_HOURS;
     }
-    
-    
+
+    public void add30Days() {
+        this.expiration += SECONDS_IN_30_DAYS;
+        this.update();
+    }
+
+    /**
+     * Verifica si el campo expiration ya está vencido.
+     *
+     * @param expiration El Unix timestamp de expiración.
+     * @return true si está vencido, false si no.
+     */
+    public boolean isExpired() {
+        // Obtener el timestamp actual
+        long currentTimestamp = Instant.now().getEpochSecond();
+        // Comparar con el campo expiration
+        return expiration < currentTimestamp;
+    }
 
 }
-   
-
