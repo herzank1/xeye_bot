@@ -28,16 +28,17 @@ public class UserGUI extends QuizGui {
         switch (user.getAccountType()) {
 
             case AccountType.USER:
-            //    mainMenu.addItem(new GUIExplorer(xeyeUpdate.getSenderId(), null, "💽 XEYE:/ 💽"));
+                mainMenu.addItem(new GUIExplorerUser(xeyeUpdate.getSenderId(), null, "💽 Xeye Explorer"));
                 mainMenu.addItem(new GUIKaelus(xeyeUpdate.getSenderId(), null, "⚡ Kaelus TV ⚡"));
 
                 break;
 
             case AccountType.MODERATOR:
-                
-                mainMenu.addItem(new GUIExplorerMod(xeyeUpdate.getSenderId(), null, "(Mod) 💽 XEYE:/ 💽"));
-                mainMenu.addItem(new GUICollectorMod( null, "(Mod) Collector"));
-                mainMenu.addItem(new GUIKaelusMod(xeyeUpdate.getSenderId(), null, "(Mod) ⚡ Kaelus TV ⚡"));
+
+                mainMenu.addItem(new GUIExplorerMod(xeyeUpdate.getSenderId(), null, "✴ 💽 XEYE:/ 💽"));
+                mainMenu.addItem(new GUIXeyeAccountsMod(null, "✴ Explorer Mng 👥"));
+                mainMenu.addItem(new GUICollectorMod(null, "✴ Collector 🎞"));
+                mainMenu.addItem(new GUIKaelusMod( null, "✴ ⚡ Kaelus TV 👥"));
 
                 break;
 

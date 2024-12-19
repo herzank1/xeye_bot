@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -12,41 +13,45 @@ import com.monge.tbotboot.messenger.MessageMenu;
 import com.monge.tbotboot.messenger.Response;
 import com.monge.tbotboot.messenger.Xupdate;
 import com.monge.tbotboot.objects.FileType;
+import com.monge.tbotboot.objects.Receptor;
 import com.monge.tbotboot.objects.TelegramFile;
 import com.monge.tbotboot.utils.PageListViewer;
 import com.monge.tbotboot.utils.RandomCaptcha;
 import com.monge.xeye.explorer.DriveExplorer;
 import static com.monge.xeye.explorer.DriveExplorer.ROOT_PATH;
-
+import com.monge.xeye.xeye.contability.BalanceAccount;
+import com.monge.xeye.xeye.contability.General;
+import com.monge.xeye.xeye.database.DataBase;
 import com.monge.xeye.xeye.objects.Xfile;
-import com.monge.xeye.xeye.utils.Utils;
+import com.monge.xeye.xeye.objects.Xuser;
 import java.util.ArrayList;
-import java.util.HashMap;
-import com.monge.virtualexplorer.objects.FileVirtual;
 
 /**
  *
  * @author DeliveryExpress
  */
-public class GUIExplorerMod extends GuiItem {
+public class GUIExplorerUser extends GuiItem {
 
     ArrayList<Xfile> currentDirectory;
     PageListViewer list;
     int currentPage = 1;
     Xfile current;
     // Xfile current;
-    String userId;
+    Xuser user;
+    BalanceAccount balance;
     String botUserNname;
     //  Xuser xuser;
     String msgId;
-    int newFiles = 0;
 
-    public GUIExplorerMod(String userId, GuiElement parent, String text) {
+    public GUIExplorerUser(String userId, GuiElement parent, String text) {
         super(parent, text);
         currentDirectory = DriveExplorer.readDirectory(ROOT_PATH);
         list = new PageListViewer(currentDirectory, 10);
-        this.userId = userId;
+        user = Xuser.read(Xuser.class, userId);
+        balance = user.getBalance();
         current = DriveExplorer.getRoot();
+
+        System.out.println("currentDirectory " + currentDirectory.size());
 
     }
 
@@ -63,14 +68,12 @@ public class GUIExplorerMod extends GuiItem {
             this.botUserNname = xupdate.getBotUserName();
         }
 
-        /*procesamos si recibimos un archivo*/
-        if (xupdate.getFile() != null) {
-            processFile(xupdate, xupdate.getFile());
+        if (xupdate.getFile() != null && xupdate.getFile().getType().equals(FileType.IMAGE)) {
+            processImage(xupdate, xupdate.getFile());
             return;
         }
 
         Command command = new Command(xupdate.getText(), "=");
-        // System.out.println("-------------> " + command);
 
         switch (command.command()) {
 
@@ -79,18 +82,21 @@ public class GUIExplorerMod extends GuiItem {
                 break;
 
             case "--dir":
-                super.setDisableParentResponse(false);
-                Xfile dir = DriveExplorer.getVirtualDirectoryByHash(command.getParam(1));
 
-                currentDirectory = DriveExplorer.readDirectory(dir.getPath());
-                list.setList(currentDirectory);
-                current = dir;
+                super.setDisableParentResponse(false);
+                    Xfile dir = DriveExplorer.getVirtualDirectoryByHash(command.getParam(1));
+                    System.out.print("--dir "+command.getParam(1));
+                    currentDirectory = DriveExplorer.readDirectory(dir.getPath());
+                    list.setList(currentDirectory);
+                    current = dir;
+              
+
                 break;
 
             case "--file":
 
-                FileVirtual file = DriveExplorer.getVirtualFileByHash(command.getParam(1));
-                current = (Xfile) file;
+                Xfile file = DriveExplorer.getVirtualFileByHash(command.getParam(1));
+                current = file;
 
                 break;
             case "--portrait":
@@ -102,6 +108,17 @@ public class GUIExplorerMod extends GuiItem {
                 break;
 
             case "--getfile":
+
+                Xuser telegramUser = DataBase.getTelegramUser(xupdate.getSenderId(), xupdate.getBotUserName());
+                boolean expired = telegramUser.getBalance().isExpired();
+                if (expired) {
+
+                    super.setDisableParentResponse(true);
+                    Response.sendMessage(xupdate.getTelegramUser(), "Tu acceso ha expirado", MessageMenu.okAndDeleteMessage("--deletemsg"));
+
+                    return;
+                }
+
                 if (current != null) {
                     MessageMenu menu = new MessageMenu();
                     // Configurar captcha
@@ -142,40 +159,21 @@ public class GUIExplorerMod extends GuiItem {
                 break;
 
             case "--close":
+
                 Response.deleteMessage(xupdate);
                 break;
 
             case "--fail":
-                Response.sendMessage(xupdate.getTelegramUser(), "Demuestra que eres humano!", MessageMenu.okAndDeleteMessage("--deletemsg"));
+                Response.sendMessage(xupdate.getTelegramUser(), "Demuestra que eres humano!", null);
+
+                break;
+            case "--unlock":
+                Response.sendMessage(xupdate.getTelegramUser(), unlockMessage(), MessageMenu.okAndDeleteMessage("--deletemsg"));
 
                 break;
 
-            case "mkdir":
-
-                makeDir(command.getParam(1));
-
-                break;
-
-            case "rmpreview":
-
-                rmPreview();
-
-                break;
-
-//            case "rmthis":
-//
-//                removeThis();
-//
-//                break;
-//            case "movethisto":
-//
-//                moveThisTo(command.getParam(1));
-//
-//                break;
-            case "--reload":
-                this.msgId = xupdate.getMessageId();
+            case "reload":
                 reloadDrive();
-                newFiles =0;
 
                 break;
 
@@ -194,15 +192,22 @@ public class GUIExplorerMod extends GuiItem {
         MessageMenu menu = new MessageMenu();
 
         if (current != null && !current.isRootFolder()) {
+         
             menu.addButton("⬆ ", "--dir=" + current.getParentVf().getHash(), false);
+          
+            
+           
         }
-        MessageMenu navMenu = list.getNavMenu("--page=", this.currentPage);
-        
-        menu.addButton("♻ "+newFiles, "--reload", true);
-        menu.merge(navMenu);
-        menu.addNewLine();
+
+        if (balance.isExpired()) {
+            menu.addButton("🔑 Desbloquear", "--unlock", true);
+        }
 
         if (current != null && current.isDirectory()) {
+
+            MessageMenu navMenu = list.getNavMenu("--page=", this.currentPage);
+            menu.merge(navMenu);
+            menu.addNewLine();
 
             ArrayList<Xfile> page = list.getPage(currentPage);
 
@@ -241,12 +246,13 @@ public class GUIExplorerMod extends GuiItem {
 
         }
 
+        /*si current es archivo*/
         if (current != null && !current.isDirectory()) {
 
             switch (current.getType()) {
 
                 case FileType.VIDEO:
-                    menu.addButton("🎬 Ver ", "--success", true);
+                    menu.addButton("🎬 Ver ", "--getfile", true);
 
                     if (current.hasPreview(botUserNname)) {
                         menu.addButton("🌅 Ver Portada", "--portrait", true);
@@ -264,14 +270,17 @@ public class GUIExplorerMod extends GuiItem {
 
     @Override
     public String draw() {
+
+        String accessStatus = balance.isExpired() ? "🔒❌ " : "🔓✅ ";
+
         if (current != null) {
 
             if (current.isDirectory()) {
 
-                return "💽 " + current.getPath() + "\n📂 " + current.getName() + commands();
+                return "🆔 " + this.user.getId() + "\n" + accessStatus + "💽 " + current.getPath() + "\n📂 " + current.getName();
             } else {
 
-                return "💽 " + current.getPath() + "\n\n" + current.getData() + commands();
+                return "🆔 " + this.user.getId() + "\n" + accessStatus + "💽 " + current.getPath() + "\n\n" + current.getData();
             }
 
         }
@@ -280,116 +289,45 @@ public class GUIExplorerMod extends GuiItem {
 
     }
 
-    private String getCurrentDirectory() {
-
-        if (current == null) {
-            return ROOT_PATH;
-        }
-
-        if (current.isDirectory()) {
-            return current.getPath();
-        } else {
-
-            return current.getParent();
-        }
-
-    }
-
     private void reloadDrive() {
         DriveExplorer.reload();
-        currentDirectory = DriveExplorer.readDirectory(getCurrentDirectory());
+        currentDirectory = (ArrayList<Xfile>) DriveExplorer.readDirectory(ROOT_PATH);
         list.setList(currentDirectory);
-
     }
 
-    private void makeDir(String folderName) {
-
-        Xfile createFolder = DriveExplorer.createFolder(getCurrentDirectory(), folderName);
-        //current = createFolder;
-        reloadDrive();
-
+    private String unlockMessage() {
+        return "Para desbloquear la unidad XEYE/:"
+                + " realiza un pago de 20 pesos MXN (1 Mes de Accesso)"
+                + " desde tu App de banco o en oxxo a..."
+                + "\n👉 Targeta: 4152 3138 1329 7715"
+                + "\n👉 Banco BBVA"
+                + "\n👉 Beneficiario Diego Villarreal"
+                + "\n👉 Ref: id de telegram."
+                + "\n"
+                + "Una vez echo tu pago envia captura o foto del"
+                + " comprobante a este mismo chat. y en unos momentos "
+                + " se debloqueara la unidad y podras acceder a miles de peliculas y series!"
+                + " ademas de cientos de archivos!"
+                + " cualquier duda o soporte aqui 👉 @Soporte_01"
+                + "\n\n"
+                + "";
     }
 
-    private void processFile(Xupdate xupdate, TelegramFile file) {
+    private void processImage(Xupdate update, TelegramFile file) {
 
+        Receptor receptor = General.getPaymentsGroupReceptor();
+        Response.sendFile(receptor, file, "Nuevo pago recibido!"
+                + "\n Usuario ID:" + update.getSenderId()
+                + "\n Servicio: Xeye Explorer", null);
 
-        try {
-            switch (file.getType()) {
-
-                /*para videos verificar duplicados y guardar*/
-                case FileType.VIDEO:
-
-                    String xeyeUUID = Utils.getXeyeUUID(file.getFileName());
-
-                    /*si el video no contiene un xeyeid */
-                    if (xeyeUUID == null) {
-                        /*creamos el archivo video*/
-                        Xfile xfile = new Xfile(file, getCurrentDirectory());
-                        xfile.create();
-
-                        /*asiganmos el archivo recibido como el actual*/
-                        System.out.println("Video recibido! -> " + xfile.getFileName());
-                        newFiles++;
-
-                    }
-
-                    break;
-//
-//                /*para imagenes solo agregar mirror al current y no almacenar en db*/
-//                case FileType.IMAGE:
-//                    if (current != null) {
-//                        /*solo se puede asginar portada si mo la tiene, asi evitar portadas equivocadas*/
-//                        if (current.getPreview(botUserNname) == null) {
-//                            Xfile xfile = current;
-//                            HashMap<String, String> previewsMirrors = xfile.getPrevMirrors();
-//                            previewsMirrors.put(file.getBot(), file.getFileId());
-//                            xfile.setPrevMirrors(previewsMirrors);
-//                            xfile.update();
-//
-//                            System.out.println("Portada recibida para -> " + xfile.getFileName());
-//
-//                        }
-//
-//                    }
-//
-//                    break;
-
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-        }
-
-     
-
-    }
-
-    private String commands() {
-
-        return "\n"
-                + "\n⚡Comandos:"
-                + "\n⚡mkdir=folderName/ -> crea nueva carpeta."
-                + "\n⚡rmpreview -> elimina una vista previa o portada."
-                //+ "\n⚡rmthis -> elimina permanentemente el archivo actual."
-                //+ "\n⚡movethisto=path -> move el archivo actual a path indicado."
-                + "\n⚡reload -> recarga todo";
-    }
-
-    private void rmPreview() {
-
-        current.removePreview(this.botUserNname);
-        reloadDrive();
-
-    }
-
-    private void removeThis() {
-
-        if (!current.isDirectory()) {
-            current.delete();
-            reloadDrive();
-        }
+        Response.sendMessage(update.getTelegramUser(), "Imagen recibida!"
+                + "\n⚠ En este chat solo debes enviar evidencias de pago de "
+                + "Servicio Xeye Explorer, su foto(Screen Shot) sera revisado por algun "
+                + "moderador, una vez confirmado (puede durar hasta 4hrs), "
+                + "se habilitara acceso por un mes, que te permitira acceder a todo el contenido de la unidad."
+                + " ❗si se "
+                + "detecta un intento de engaño, seras bloqueado.❗"
+                + "\n 👉 @Soporte_01", MessageMenu.okAndDeleteMessage("--deletemsg"));
 
     }
 

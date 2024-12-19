@@ -8,14 +8,17 @@ import com.google.gson.Gson;
 import com.j256.ormlite.field.DatabaseField;
 import com.monge.tbotboot.objects.FileType;
 import com.monge.tbotboot.objects.TelegramFile;
+import com.monge.virtualexplorer.Drive;
+import com.monge.virtualexplorer.utils.SharedUtilities;
 import com.monge.xeye.explorer.DriveExplorer;
-import com.monge.xeye.explorer.SharedUtilities;
+
 import com.monge.xeye.xeye.utils.Utils;
-import com.monge.xsqlite.xsqlite.BaseDao;
+import com.monge.xsqlite.utils.BaseDao;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.monge.virtualexplorer.objects.FileVirtual;
 
 /**
  *
@@ -25,7 +28,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class Xfile extends BaseDao {
+public class Xfile extends BaseDao implements FileVirtual {
 
     @DatabaseField(id = true)
     String id;
@@ -73,12 +76,11 @@ public class Xfile extends BaseDao {
 
     }
 
-    /**
-     * *
-     *
-     * @param document
-     * @param mirror
-     */
+   /***
+    * 
+    * @param file
+    * @param path 
+    */
     public Xfile(TelegramFile file, String path) {
         this.id = Utils.generateXeyeUIDD();
         this.fileName = normalizeName(file.getFileName()) + "." + file.getType().toLowerCase();
@@ -162,8 +164,8 @@ public class Xfile extends BaseDao {
         }
 
     }
-    
-     public void removefileMirror(String botUserNname) {
+
+    public void removefileMirror(String botUserNname) {
 
         try {
             HashMap<String, String> fileMirrors = this.getFileMirrors();
@@ -176,9 +178,6 @@ public class Xfile extends BaseDao {
         }
 
     }
-    
-    
-    
 
     /**
      * *
@@ -283,11 +282,21 @@ public class Xfile extends BaseDao {
     }
 
     public void updatePath(String path) {
-        if(SharedUtilities.isValidPath(path)){
-            this.path = SharedUtilities.createPath(path, fileName);
-            
-        }
-   
+
+        this.path = SharedUtilities.createPath(path, fileName);
+
+    }
+
+    @Override
+    public Drive getDrive() {
+
+        return DriveExplorer.getXeye();
+
+    }
+
+    @Override
+    public void delete() {
+       super.delete();
     }
 
 }

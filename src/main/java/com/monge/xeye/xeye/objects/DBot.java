@@ -6,7 +6,7 @@ package com.monge.xeye.xeye.objects;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.monge.tbotboot.messenger.Bot;
-import com.monge.xsqlite.xsqlite.BaseDao;
+import com.monge.xsqlite.utils.BaseDao;
 import java.util.logging.Logger;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper=false)
 public class DBot extends BaseDao {
     
-    @DatabaseField(generatedId = false)
+     @DatabaseField(id = true)
     private String userName;
     @DatabaseField
     private String apiKey;

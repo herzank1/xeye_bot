@@ -6,6 +6,7 @@ package com.monge.xeye.xeye.telegram;
 
 import com.monge.tbotboot.messenger.Xupdate;
 import com.monge.xeye.xeye.database.DataBase;
+import com.monge.xeye.xeye.objects.KaelusAccount;
 import com.monge.xeye.xeye.objects.Xuser;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -23,6 +24,18 @@ public class XeyeUpdate extends Xupdate{
         return DataBase.getTelegramUser(super.getSenderId(), super.getBotUserName());
 
     }
+    
+    public Xuser getXgroup() {
+    
+          return DataBase.getTelegramGroup(super.getFromId(), super.getBotUserName());
+    }
+    
+    public KaelusAccount getKaelusAccount(){
+        return DataBase.getKaelusAccount(super.getSenderId());
+    
+    }
+
+    
 
     
 }

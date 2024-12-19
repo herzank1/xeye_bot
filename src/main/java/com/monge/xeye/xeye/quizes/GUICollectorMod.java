@@ -7,17 +7,16 @@ package com.monge.xeye.xeye.quizes;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.monge.tbotboot.commands.Command;
-import com.monge.tbotboot.gui.GuiBase;
 import com.monge.tbotboot.gui.GuiElement;
 import com.monge.tbotboot.gui.GuiItem;
 import com.monge.tbotboot.messenger.MessageMenu;
 import com.monge.tbotboot.messenger.Xupdate;
 import com.monge.tbotboot.objects.FileType;
 import com.monge.tbotboot.objects.TelegramFile;
+import com.monge.virtualexplorer.utils.SharedUtilities;
 import com.monge.xeye.explorer.DriveExplorer;
-import com.monge.xeye.explorer.SharedUtilities;
+
 import com.monge.xeye.xeye.objects.Xfile;
-import com.monge.xsqlite.xsqlite.GenericDao;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -90,9 +89,9 @@ public class GUICollectorMod extends GuiItem {
         switch (command.command()) {
 
             case "setdirectory":
-                if (SharedUtilities.isValidPath(command.getParam(1))) {
+              
                     this.path = command.getParam(1);
-                }
+     
 
                 break;
 

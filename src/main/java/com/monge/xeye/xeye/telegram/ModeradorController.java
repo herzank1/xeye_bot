@@ -5,6 +5,7 @@
 package com.monge.xeye.xeye.telegram;
 
 import com.monge.tbotboot.commands.Command;
+import com.monge.tbotboot.messenger.Response;
 import com.monge.tbotboot.quizes.QuizesControl;
 import com.monge.xeye.xeye.objects.Xuser;
 import com.monge.xeye.xeye.quizes.UserGUI;
@@ -28,6 +29,11 @@ class ModeradorController {
                 QuizesControl.add(new UserGUI(xeyeUpdate));
                 QuizesControl.execute(xeyeUpdate);
 
+                break;
+            
+            case "/delete_msg":
+                Response.deleteMessage(xeyeUpdate);
+                
                 break;
         }
 

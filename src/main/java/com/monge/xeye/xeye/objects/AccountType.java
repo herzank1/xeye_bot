@@ -9,7 +9,9 @@ package com.monge.xeye.xeye.objects;
  * @author DeliveryExpress
  */
 public class AccountType {
- public static final String USER = "USER";
+
+    public static final String USER = "USER";
     public static final String MODERATOR = "MODERATOR";
+    public static final String GROUP = "GROUP";
 
 }

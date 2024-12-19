@@ -7,11 +7,17 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <exec.mainClass>com.monge.xeye.xeye.Xeye</exec.mainClass>
     </properties>
     <dependencies>
+        
+                <dependency>
+             <groupId>com.monge</groupId>
+    <artifactId>VirtualExplorer</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -54,6 +60,8 @@
             <!-- Maven Jar Plugin: Crea el JAR del código principal sin dependencias -->
         <plugin>
             <artifactId>maven-jar-plugin</artifactId>
+                 <version>3.3.0</version> <!-- Cambia por la versión estable más reciente -->
+       
             <configuration>
                 <archive>
                     <manifest>

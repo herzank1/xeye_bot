@@ -6,7 +6,7 @@ package com.monge.xeye.xeye.contability;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.monge.xeye.xeye.utils.Utils;
-import com.monge.xsqlite.xsqlite.BaseDao;
+import com.monge.xsqlite.utils.BaseDao;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Data;
@@ -44,6 +44,16 @@ public class BalanceAccount extends BaseDao {
         this.update();
     }
 
+    public void add2hours() {
+        this.expiration += SECONDS_IN_TWO_HOURS;
+        this.update();
+    }
+
+    public void setExired() {
+        this.expiration = Utils.DateUtils.getUnixTimeStamp() - 10000;
+        this.update();
+    }
+
     /**
      * Verifica si el campo expiration ya está vencido.
      *
@@ -55,6 +65,13 @@ public class BalanceAccount extends BaseDao {
         long currentTimestamp = Instant.now().getEpochSecond();
         // Comparar con el campo expiration
         return expiration < currentTimestamp;
+    }
+
+    public String toStringForTelegram() {
+        String expirationStatus = isExpired() ? "❌ Vencido" : "✅ Activo";
+        return "Acceso a Xeye\n" // "💳 Número de Cuenta: " + accountNumber + "\n"
+                // + "💰 Balance: " + balance + "\n"
+                + "⏳ Expiración: " + (expiration > 0 ? Utils.DateUtils.unixToDate(expiration) : "No especificada") + " " + expirationStatus;
     }
 
 }

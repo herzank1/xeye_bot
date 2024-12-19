@@ -5,7 +5,7 @@ import com.monge.tbotboot.objects.TelegramUser;
 import com.monge.xeye.xeye.Xeye;
 import com.monge.xeye.xeye.contability.BalanceAccount;
 
-import com.monge.xsqlite.xsqlite.BaseDao;
+import com.monge.xsqlite.utils.BaseDao;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -52,6 +52,15 @@ public class Xuser extends BaseDao {
         this.balanceAccountId = balanceAccountId;
     }
 
+    public Xuser(String fromId, String botUserName, boolean b, String type) {
+
+        this.id = fromId;
+        this.lastNodeBot = botUserName;
+        this.blackList = false;
+        this.accountType = type;
+        this.balanceAccountId = null;
+    }
+
     public BalanceAccount getBalance() {
         BalanceAccount read = BalanceAccount.read(BalanceAccount.class, this.balanceAccountId);
 
@@ -61,9 +70,22 @@ public class Xuser extends BaseDao {
             this.update();
             read.create();
         }
-        
+
         return read;
 
+    }
+
+    public void swtichBlackList() {
+        this.blackList = !this.blackList;
+        this.update();
+    }
+
+    public String toStringForTelegram() {
+        return "👤 ID: " + id + "\n"
+                + "🤖 Último Nodo Bot: " + lastNodeBot + "\n"
+                + "⛔ Lista Negra: " + (blackList ? "Sí" : "No") + "\n"
+                + "💳 Tipo de Cuenta: " + accountType + "\n";
+               // + "🏦 Balance Account ID: " + (balanceAccountId != null ? balanceAccountId : "No disponible");
     }
 
 }

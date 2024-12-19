@@ -5,7 +5,7 @@
 package com.monge.xeye.xeye.objects;
 
 import com.j256.ormlite.field.DatabaseField;
-import com.monge.xsqlite.xsqlite.BaseDao;
+import com.monge.xsqlite.utils.BaseDao;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators;
@@ -17,7 +17,7 @@ import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdm
 @Data
 @EqualsAndHashCode(callSuper=false)
 public class BackUpChannel extends BaseDao{
-    @DatabaseField(generatedId = false)
+      @DatabaseField(id = true)
     String id;
     @DatabaseField
     String name;

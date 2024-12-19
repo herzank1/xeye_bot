@@ -4,6 +4,7 @@
  */
 package com.monge.xeye.xeye.telegram;
 
+import com.google.gson.GsonBuilder;
 import com.monge.tbotboot.commands.CommandsHandlers;
 import com.monge.tbotboot.messenger.Xupdate;
 import com.monge.tbotboot.quizes.QuizesControl;
@@ -22,10 +23,11 @@ public class UsersHandlers implements CommandsHandlers {
         
         XeyeUpdate xeyeUpdate = new XeyeUpdate(xupdate.getUpdate(),xupdate.getBotUserName());
 
-        Xuser xuser = DataBase.getTelegramUser(xupdate.getSenderId(), xupdate.getBotUserName());
-    //    System.out.println("execute update" + xuser.toString());
+   //    System.out.println("execute update" + xuser.toString());
 
-       
+        //System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(xupdate));
+        System.out.println(xupdate.toStringDetails());
+
      
 
         if (xupdate.isGroupMessage()) {
@@ -35,6 +37,8 @@ public class UsersHandlers implements CommandsHandlers {
             if (QuizesControl.hasQuiz(xupdate.getSenderId())) {
                 QuizesControl.execute(xupdate);
             } else {
+                      Xuser xuser = DataBase.getTelegramUser(xupdate.getSenderId(), xupdate.getBotUserName());
+   
 
                 switch (xuser.getAccountType()) {
 
